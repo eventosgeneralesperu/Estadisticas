@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Crack - Botonera de Partido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Evita que se seleccione el texto al tocar los botones rápido */
+        body { user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        .btn-flash { transition: background-color 0.1s; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white h-screen flex flex-col font-sans overflow-hidden">
+
+    <!-- Barra Superior: Info y Live Stats -->
+    <header class="bg-gray-800 p-4 shadow-md z-10">
+        <div class="flex justify-between items-center mb-2">
+            <div>
+                <h1 class="text-xl font-bold text-green-400">Jugador: <span id="nombre-jugador" class="text-white">Cargando...</span></h1>
+                <p class="text-xs text-gray-400">Minutos: <span id="tiempo-cancha">0</span>'</p>
+            </div>
+            <button onclick="finalizarPartido()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold shadow-lg">
+                Finalizar
+            </button>
+        </div>
+        
+        <!-- Gamificación: Resumen en vivo -->
+        <div class="flex justify-between text-sm bg-gray-700 rounded-lg p-2">
+            <span title="Efectividad">🎯 Pases: <span id="live-pases" class="font-bold text-green-400">0</span></span>
+            <span title="Duelos">⚔️ Duelos: <span id="live-duelos" class="font-bold text-blue-400">0</span></span>
+            <span title="Peligro">🔥 Remates: <span id="live-remates" class="font-bold text-yellow-400">0</span></span>
+        </div>
+    </header>
+
+    <!-- Cuadrícula de Botones Masivos (Fat-Finger Design) -->
+    <main class="flex-grow grid grid-cols-2 gap-2 p-2">
+        
+        <button id="btn-Pases_Correctos" onclick="registrar('Pases_Correctos')" class="btn-flash bg-green-600 active:bg-green-400 rounded-xl flex flex-col justify-center items-center shadow-lg">
+            <span class="text-4xl mb-1">✅</span>
+            <span class="font-bold text-lg leading-tight">Pase<br>Correcto</span>
+        </button>
+
+        <button id="btn-Pases_Fallados" onclick="registrar('Pases_Fallados')" class="btn-flash bg-orange-600 active:bg-orange-400 rounded-xl flex flex-col justify-center items-center shadow-lg">
+            <span class="text-4xl mb-1">❌</span>
+            <span class="font-bold text-lg leading-tight">Pase<br>Fallado</span>
+        </button>
+
+        <button id="btn-Duelos_Ganados" onclick="registrar('Duelos_Ganados')" class="btn-flash bg-blue-600 active:bg-blue-400 rounded-xl flex flex-col justify-center items-center shadow-lg">
+            <span class="text-4xl mb-1">💪</span>
+            <span class="font-bold text-lg leading-tight">Duelo<br>Ganado</span>
+        </button>
+
+        <button id="btn-Duelos_Perdidos" onclick="registrar('Duelos_Perdidos')" class="btn-flash bg-red-500 active:bg-red-400 rounded-xl flex flex-col justify-center items-center shadow-lg">
+            <span class="text-4xl mb-1">⚠️</span>
+            <span class="font-bold text-lg leading-tight">Duelo<br>Perdido</span>
+        </button>
+
+        <button id="btn-Perdidas_Balon" onclick="registrar('Perdidas_Balon')" class="btn-flash bg-gray-700 active:bg-gray-500 rounded-xl flex flex-col justify-center items-center shadow-lg border-2 border-red-500">
+            <span class="text-4xl mb-1">📉</span>
+            <span class="font-bold text-lg leading-tight">Pérdida<br>de Balón</span>
+        </button>
+
+        <button id="btn-Remates_Arco" onclick="registrar('Remates_Arco')" class="btn-flash bg-purple-600 active:bg-purple-400 rounded-xl flex flex-col justify-center items-center shadow-lg border-2 border-yellow-400">
+            <span class="text-4xl mb-1">🚀</span>
+            <span class="font-bold text-lg leading-tight">Remate<br>al Arco</span>
+        </button>
+
+    </main>
+
+    <!-- Overlay de Carga (Oculto por defecto) -->
+    <div id="loading-overlay" class="hidden absolute inset-0 bg-black bg-opacity-80 flex flex-col justify-center items-center z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mb-4"></div>
+        <h2 class="text-xl font-bold text-white">Guardando partido...</h2>
+    </div>
+
+    <script>
+        // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT (La que termina en /exec)
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwyYnp1cV64m7x25Wgc04IwyW07zo1oPW9V0BWZXtr4-IAXaKHIorCRl76MFFpm6gKU/exec"; 
+
+        // Leer el parámetro de la URL (ej: index.html?id=Jugador123)
+        const urlParams = new URLSearchParams(window.location.search);
+        const idJugador = urlParams.get('id') || "ID_Prueba";
+        
+        // Simulación básica del nombre (luego lo conectaremos al Sheet)
+        document.getElementById('nombre-jugador').innerText = idJugador;
+
+        // Base de datos temporal en el celular
+        let estadisticas = {
+            Pases_Correctos: 0, Pases_Fallados: 0,
+            Duelos_Ganados: 0, Duelos_Perdidos: 0,
+            Perdidas_Balon: 0, Remates_Arco: 0
+        };
+
+        // Cronómetro básico de minutos en cancha
+        let horaInicio = Date.now();
+        setInterval(() => {
+            let minutos = Math.floor((Date.now() - horaInicio) / 60000);
+            document.getElementById('tiempo-cancha').innerText = minutos;
+        }, 60000); // Actualiza cada 60 segundos
+
+        // Función principal de registro
+        function registrar(accion) {
+            // 1. Aumentar el contador
+            estadisticas[accion]++;
+            
+            // 2. Feedback Háptico (Vibración corta)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            // 3. Actualizar la barra superior en vivo
+            document.getElementById('live-pases').innerText = estadisticas.Pases_Correctos;
+            document.getElementById('live-duelos').innerText = estadisticas.Duelos_Ganados;
+            document.getElementById('live-remates').innerText = estadisticas.Remates_Arco;
+        }
+
+        // Enviar datos al Backend
+        async function finalizarPartido() {
+            if(confirm("¿Seguro que deseas finalizar y guardar el partido?")) {
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                
+                const payload = {
+                    ID_Jugador: idJugador,
+                    Rival: prompt("¿Contra quién jugaron hoy?") || "Rival Desconocido",
+                    Minutos_Jugados: document.getElementById('tiempo-cancha').innerText,
+                    ...estadisticas
+                };
+
+                try {
+                    await fetch(URL_GOOGLE_SCRIPT, {
+                        method: 'POST',
+                        mode: 'no-cors', // Evita bloqueos de seguridad del navegador temporalmente
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    alert("¡Estadísticas guardadas con éxito!");
+                    window.location.reload(); // Reinicia la botonera
+                    
+                } catch (error) {
+                    alert("Hubo un error al guardar. Revisa tu conexión a internet.");
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
