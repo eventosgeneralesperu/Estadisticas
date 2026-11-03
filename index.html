@@ -76,7 +76,7 @@
 
     <script>
         // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT (La que termina en /exec)
-        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwyYnp1cV64m7x25Wgc04IwyW07zo1oPW9V0BWZXtr4-IAXaKHIorCRl76MFFpm6gKU/exec"; 
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwKdGv_hbn9cDO7VgMPFH8ZbHTG5QBxoEovEF_hWweiirU-oNZMRM6mV4MPQ00z-SY/exec"; 
 
         // Leer el parámetro de la URL (ej: index.html?id=Jugador123)
         const urlParams = new URLSearchParams(window.location.search);
@@ -130,9 +130,8 @@
                 try {
                     await fetch(URL_GOOGLE_SCRIPT, {
                         method: 'POST',
-                        headers: { 
-                            'Content-Type': 'text/plain;charset=utf-8' 
-                        },
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
                     
