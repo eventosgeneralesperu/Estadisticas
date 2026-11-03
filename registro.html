@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Crack - Registro y Suscripción</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col">
+
+    <!-- Hero Section -->
+    <header class="bg-gradient-to-r from-green-600 to-blue-600 p-8 text-center shadow-lg rounded-b-3xl">
+        <h1 class="text-4xl font-extrabold mb-2 uppercase tracking-tight">Mi Crack ⚽</h1>
+        <p class="text-lg text-gray-100">Convierte la pasión de tu hijo en estadísticas reales.</p>
+    </header>
+
+    <main class="flex-grow p-6 max-w-lg mx-auto w-full">
+        
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700 mb-6">
+            <h2 class="text-2xl font-bold text-center mb-4 text-yellow-400">Únete por S/. 20 al mes</h2>
+            <ul class="text-gray-300 space-y-2 mb-6 text-sm">
+                <li>✅ Botonera interactiva para partidos en vivo.</li>
+                <li>✅ Perfil digital con gráficos de rendimiento.</li>
+                <li>✅ Historial de logros para compartir.</li>
+            </ul>
+
+            <!-- Formulario de Registro -->
+            <form id="formRegistro" onsubmit="procesarRegistro(event)" class="space-y-4">
+                
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Nombre del Padre / Madre</label>
+                    <input type="text" id="nombrePadre" required class="w-full bg-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500 border border-gray-600" placeholder="Ej. Carlos Osorio">
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Nombre del Jugador (Niño)</label>
+                    <input type="text" id="nombreNino" required class="w-full bg-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500 border border-gray-600" placeholder="Ej. Mateo Osorio">
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Tu número de Celular</label>
+                    <input type="tel" id="celularPadre" required class="w-full bg-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500 border border-gray-600" placeholder="Ej. 987654321">
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-1">Privacidad del Perfil</label>
+                    <select id="privacidad" class="w-full bg-gray-700 text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-green-500 border border-gray-600">
+                        <option value="Público (Modo Vitrina)">Público (Cualquiera con el link puede verlo)</option>
+                        <option value="Privado (Solo Familia)">Privado (Oculto para terceros)</option>
+                    </select>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-gray-900 font-extrabold text-lg py-4 px-4 rounded-xl shadow-lg transition-transform transform active:scale-95">
+                        💳 Pagar por Yape/Plin y Activar
+                    </button>
+                    <p class="text-xs text-center text-gray-400 mt-3">Serás redirigido a WhatsApp para confirmar tu pago.</p>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        function procesarRegistro(event) {
+            event.preventDefault(); // Evita que la página se recargue
+
+            const padre = document.getElementById('nombrePadre').value;
+            const nino = document.getElementById('nombreNino').value;
+            const celular = document.getElementById('celularPadre').value;
+            const privacidad = document.getElementById('privacidad').value;
+
+            // Tu número de WhatsApp (Aliado Tech / Roberto)
+            const numeroAdmin = "51914972428"; 
+
+            // Construir el mensaje predeterminado
+            const texto = `¡Hola! ⚽ Vengo de la web de Mi Crack y quiero suscribir a mi hijo.%0A%0A*Datos del Jugador:*%0A👤 Niño: ${nino}%0A👨‍👦 Padre/Madre: ${padre}%0A📱 Mi Celular: ${celular}%0A🔒 Perfil: ${privacidad}%0A%0A*Estoy listo para enviar mi captura de Yape/Plin por S/. 20.*`;
+
+            // Redirigir a WhatsApp
+            const urlWhatsApp = `https://wa.me/${numeroAdmin}?text=${texto}`;
+            window.open(urlWhatsApp, '_blank');
+        }
+    </script>
+</body>
+</html>
