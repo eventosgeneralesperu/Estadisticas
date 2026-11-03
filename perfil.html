@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Crack - Perfil del Jugador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen">
+
+    <!-- Cabecera del Jugador -->
+    <header class="bg-gradient-to-r from-green-600 to-blue-600 p-6 shadow-lg rounded-b-3xl">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold">Jugador <span id="nombre-jugador">...</span></h1>
+                <p class="text-gray-200 mt-1">Categoría Formativa</p>
+            </div>
+            <div class="bg-white text-gray-900 rounded-full h-16 w-16 flex items-center justify-center font-bold text-xl border-4 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)]">
+                <span id="partidos-jugados">0</span>P
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 max-w-md mx-auto mt-4 space-y-6">
+        
+        <!-- Pantalla de Carga -->
+        <div id="loading" class="text-center py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-500 mx-auto mb-4"></div>
+            <p class="text-gray-400">Cargando estadísticas históricas...</p>
+        </div>
+
+        <!-- Contenedor de Estadísticas (Oculto hasta cargar) -->
+        <div id="stats-container" class="hidden space-y-6">
+            
+            <!-- Gráfico de Radar -->
+            <div class="bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700">
+                <h2 class="text-center font-bold text-gray-300 mb-4 uppercase tracking-wider text-sm">Perfil de Rendimiento</h2>
+                <div class="relative h-64">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Resumen Numérico -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center">
+                    <span class="text-gray-400 text-sm">Efectividad Pases</span>
+                    <span id="efectividad-pases" class="text-3xl font-bold text-green-400">0%</span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center">
+                    <span class="text-gray-400 text-sm">Efectividad Duelos</span>
+                    <span id="efectividad-duelos" class="text-3xl font-bold text-blue-400">0%</span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center">
+                    <span class="text-gray-400 text-sm">Remates al Arco</span>
+                    <span id="remates-totales" class="text-3xl font-bold text-yellow-400">0</span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-2xl shadow-lg border border-gray-700 flex flex-col items-center">
+                    <span class="text-gray-400 text-sm">Minutos Jugados</span>
+                    <span id="minutos-totales" class="text-3xl font-bold text-white">0</span>
+                </div>
+            </div>
+            
+            <!-- Botón de compartir -->
+            <button onclick="compartirPerfil()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-colors">
+                Compartir Perfil 📲
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbwKdGv_hbn9cDO7VgMPFH8ZbHTG5QBxoEovEF_hWweiirU-oNZMRM6mV4MPQ00z-SY/exec"; 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const idJugador = urlParams.get('id');
+
+        if (!idJugador) {
+            alert("Error: No se proporcionó el ID del jugador en el enlace.");
+        } else {
+            document.getElementById('nombre-jugador').innerText = idJugador;
+            cargarEstadisticas();
+        }
+
+        async function cargarEstadisticas() {
+            try {
+                // Hacer la petición GET al backend
+                const respuesta = await fetch(`${URL_GOOGLE_SCRIPT}?id=${idJugador}`);
+                const datos = await respuesta.json();
+
+                if (datos.status === "exito") {
+                    mostrarDatos(datos.estadisticas);
+                } else {
+                    alert("Error desde el servidor: " + datos.mensaje);
+                }
+            } catch (error) {
+                alert("Error de conexión al cargar las estadísticas.");
+                console.error(error);
+            }
+        }
+
+        function mostrarDatos(stats) {
+            // Ocultar carga, mostrar datos
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('stats-container').classList.remove('hidden');
+
+            // Cálculos de porcentajes
+            const totalPases = stats.pasesCorrectos + stats.pasesFallados;
+            const pctPases = totalPases > 0 ? Math.round((stats.pasesCorrectos / totalPases) * 100) : 0;
+            
+            const totalDuelos = stats.duelosGanados + stats.duelosPerdidos;
+            const pctDuelos = totalDuelos > 0 ? Math.round((stats.duelosGanados / totalDuelos) * 100) : 0;
+
+            // Llenar tarjetas
+            document.getElementById('partidos-jugados').innerText = stats.partidosJugados;
+            document.getElementById('efectividad-pases').innerText = `${pctPases}%`;
+            document.getElementById('efectividad-duelos').innerText = `${pctDuelos}%`;
+            document.getElementById('remates-totales').innerText = stats.rematesArco;
+            document.getElementById('minutos-totales').innerText = stats.minutosTotales;
+
+            // Dibujar el Gráfico de Radar
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Pases Correctos', 'Duelos Ganados', 'Remates', 'Recuperaciones (Control)', 'Participación (Min)'],
+                    datasets: [{
+                        label: 'Rendimiento',
+                        // Usamos los datos brutos. En un futuro puedes normalizarlos del 1 al 10.
+                        data: [
+                            stats.pasesCorrectos, 
+                            stats.duelosGanados, 
+                            stats.rematesArco, 
+                            (stats.pasesCorrectos + stats.duelosGanados) - stats.perdidasBalon, // Fórmula básica de control
+                            stats.minutosTotales / 10 // Escalado para no deformar el gráfico
+                        ],
+                        backgroundColor: 'rgba(34, 197, 94, 0.4)', // Verde Tailwind
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        pointBackgroundColor: 'rgba(250, 204, 21, 1)', // Amarillo Tailwind
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { color: '#9ca3af', font: { size: 12 } },
+                            ticks: { display: false, beginAtZero: true }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function compartirPerfil() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Perfil Mi Crack',
+                    text: `Mira las estadísticas oficiales de ${idJugador} en Mi Crack ⚽📊`,
+                    url: window.location.href
+                });
+            } else {
+                alert("Copia este enlace para compartir: " + window.location.href);
+            }
+        }
+    </script>
+</body>
+</html>
